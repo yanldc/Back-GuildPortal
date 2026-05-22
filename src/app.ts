@@ -27,17 +27,10 @@ export function buildApp() {
   }
 
   app.register(cors, {
-    origin: (origin, cb) => {
-      // Allow requests with no origin (mobile apps, curl, etc)
-      if (!origin || origin === corsOrigin) {
-        cb(null, true);
-      } else {
-        cb(new Error('CORS not allowed'), false);
-      }
-    },
+    origin: [corsOrigin],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   })
   app.register(cookie)
   app.register(websocket)
