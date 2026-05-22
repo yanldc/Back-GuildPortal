@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rank {
+  Leader
+  Officer
+  Elite
+  Member
+  Recruit
+}
+
+enum Role {
+  admin
+  member
+}
+
+enum ItemGrade {
+  rare
+  heroic
+  legendary
+}
+
+enum AuctionStatus {
+  active
+  finished
+}
+
+enum EventType {
+  world_boss
+  rift
+  guild_dungeon
+  ancient_fortress
+  clash
+  abyss_boss
+}
+
+enum EventStatus {
+  upcoming
+  completed
+}
+
+enum TransactionType {
+  add
+  remove
+}
+
+model Member {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  email     String   @unique
+  avatar    String
+  class     String
+  level     Int      @default(60)
+  rank      Rank     @default(Member)
+  role      Role     @default(member)
+  points    Int      @default(150)
+  guild     String   @default("RuinToo")
+  altNames  String[]
+  joinedAt  DateTime @default(now())
+  rpgProfile Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bids            Bid[]
+  auctionsCreated Auction[]
+  transactions    PointTransaction[]
+  rsvps           EventRsvp[]
+  levelupRequests LevelUpRequest[]
+  levelupSlots    LevelUpSlot[]
+  levelupHelpers  LevelUpHelper[]
+}
+
+model Auction {
+  id                String        @id @default(uuid())
+  itemName          String
+  itemGrade         ItemGrade
+  minBid            Int
+  currentBid        Int
+  currentWinnerId   String?
+  currentWinnerName String?
+  endAt             DateTime
+  createdById       String
+  status            AuctionStatus @default(active)
+  imageUrl          String
+  description       String?
+  allowedClasses    String[]
+  createdAt         DateTime      @default(now())
+
+  createdBy Member @relation(fields: [createdById], references: [id])
+  bids      Bid[]
+}
+
+model Bid {
+  id         String   @id @default(uuid())
+  auctionId  String
+  memberId   String
+  memberName String
+  amount     Int
+  timestamp  DateTime @default(now())
+
+  auction Auction @relation(fields: [auctionId], references: [id])
+  member  Member  @relation(fields: [memberId], references: [id])
+}
+
+model GuildEvent {
+  id          String      @id @default(uuid())
+  title       String
+  type        EventType
+  description String
+  date        String
+  status      EventStatus @default(upcoming)
+  minLevel    Int         @default(60)
+  rewards     String[]
+  weekday     String?
+  time        String?
+  createdAt   DateTime    @default(now())
+
+  rsvps EventRsvp[]
+}
+
+model EventRsvp {
+  id       String @id @default(uuid())
+  eventId  String
+  memberId String
+
+  event  GuildEvent @relation(fields: [eventId], references: [id])
+  member Member     @relation(fields: [memberId], references: [id])
+
+  @@unique([eventId, memberId])
+}
+
+model PointTransaction {
+  id         String          @id @default(uuid())
+  memberId   String
+  memberName String
+  amount     Int
+  reason     String
+  type       TransactionType
+  timestamp  DateTime        @default(now())
+
+  member Member @relation(fields: [memberId], references: [id])
+}
+
+model LevelUpRequest {
+  id            String   @id @default(uuid())
+  title         String
+  time          String
+  weekday       String
+  createdById   String
+  createdByName String
+  class         String
+  createdAt     DateTime @default(now())
+
+  createdBy Member        @relation(fields: [createdById], references: [id])
+  slots     LevelUpSlot[]
+}
+
+model LevelUpSlot {
+  id            String  @id @default(uuid())
+  requestId     String
+  joinedById    String
+  joinedByName  String
+  characterName String
+  isAlt         Boolean @default(false)
+
+  request LevelUpRequest @relation(fields: [requestId], references: [id])
+  member  Member         @relation(fields: [joinedById], references: [id])
+}
+
+model LevelUpHelper {
+  id                 String   @id @default(uuid())
+  memberId           String
+  memberOriginalName String
+  characterName      String
+  class              String
+  isAlt              Boolean  @default(false)
+  availability       String
+  weekday            String
+  createdAt          DateTime @default(now())
+
+  member Member @relation(fields: [memberId], references: [id])
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  class     String
+  rank      Rank     @default(Recruit)
+  code      String   @unique
+  createdAt DateTime @default(now())
+}
