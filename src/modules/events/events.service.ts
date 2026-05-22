@@ -5,7 +5,12 @@ export async function listEvents(filters: { weekday?: string; type?: EventType }
   const where: any = {}
   if (filters.weekday) where.weekday = filters.weekday
   if (filters.type) where.type = filters.type
-  return prisma.guildEvent.findMany({ where, include: { rsvps: true }, orderBy: { createdAt: 'desc' } })
+  const events = await prisma.guildEvent.findMany({ where, include: { rsvps: true }, orderBy: { createdAt: 'desc' } })
+  // Transform rsvps from relation objects to array of member IDs
+  return events.map(({ rsvps, ...event }) => ({
+    ...event,
+    rsvps: rsvps.map((r: any) => r.memberId),
+  }))
 }
 
 export async function createEvent(data: any) {

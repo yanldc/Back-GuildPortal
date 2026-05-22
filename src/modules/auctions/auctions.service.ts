@@ -2,14 +2,34 @@ import { prisma } from '../../utils/prisma.js'
 import { AuctionStatus, ItemGrade } from '@prisma/client'
 import { AppError } from '../../utils/errors.js'
 
-export async function listAuctions(filters: { status?: AuctionStatus; grade?: ItemGrade }) {
+export async function listAuctions(filters: { status?: AuctionStatus; grade?: ItemGrade; limit?: number; cursor?: string }) {
+  // Auto-finish expired auctions
+  await prisma.auction.updateMany({
+    where: { status: 'active', endAt: { lte: new Date() } },
+    data: { status: 'finished' },
+  })
+
   const where: any = {}
   if (filters.status) where.status = filters.status
   if (filters.grade) where.itemGrade = filters.grade
-  return prisma.auction.findMany({ where, include: { bids: true }, orderBy: { createdAt: 'desc' } })
+
+  const take = filters.limit || 20
+  const query: any = { where, include: { bids: true }, orderBy: { createdAt: 'desc' }, take }
+
+  if (filters.cursor) {
+    query.cursor = { id: filters.cursor }
+    query.skip = 1
+  }
+
+  return prisma.auction.findMany(query)
 }
 
 export async function getAuctionById(id: string) {
+  // Auto-finish if expired
+  await prisma.auction.updateMany({
+    where: { id, status: 'active', endAt: { lte: new Date() } },
+    data: { status: 'finished' },
+  })
   return prisma.auction.findUnique({ where: { id }, include: { bids: { orderBy: { amount: 'desc' } } } })
 }
 

@@ -29,7 +29,7 @@ export async function loginWithGoogle(email: string, name: string, avatar: strin
       data: {
         name: invite.name,
         email,
-        avatar,
+        avatar: `/avatars/${invite.class.toLowerCase().replace(/\s+/g, '-')}.png`,
         class: invite.class,
         rank: invite.rank,
         role: 'member',

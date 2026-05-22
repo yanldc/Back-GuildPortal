@@ -10,4 +10,5 @@ export async function membersRoutes(app: FastifyInstance) {
   app.get('/members/:id', controller.getMember)
   app.put('/members/:id/profile', controller.updateProfile)
   app.put('/members/:id/role', { preHandler: [roleGuard] }, controller.updateRole)
+  app.delete('/members/:id', { preHandler: [roleGuard] }, controller.deleteMember)
 }
