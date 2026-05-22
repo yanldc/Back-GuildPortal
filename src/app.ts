@@ -26,7 +26,19 @@ export function buildApp() {
     throw new Error('FATAL: CORS_ORIGIN cannot be "*" in production')
   }
 
-  app.register(cors, { origin: corsOrigin, credentials: true })
+  app.register(cors, {
+    origin: (origin, cb) => {
+      // Allow requests with no origin (mobile apps, curl, etc)
+      if (!origin || origin === corsOrigin) {
+        cb(null, true);
+      } else {
+        cb(new Error('CORS not allowed'), false);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
   app.register(cookie)
   app.register(websocket)
   app.register(jwt, {
