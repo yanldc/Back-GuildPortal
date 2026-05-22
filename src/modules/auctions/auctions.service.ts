@@ -29,12 +29,18 @@ export async function createAuction(data: {
 
 export async function placeBid(auctionId: string, memberId: string, amount: number) {
   return prisma.$transaction(async (tx) => {
-    const auction = await tx.auction.findUnique({ where: { id: auctionId } })
+    // Lock auction row to prevent race conditions
+    const [auction] = await tx.$queryRawUnsafe<any[]>(
+      `SELECT * FROM "Auction" WHERE id = $1 FOR UPDATE`, auctionId
+    )
     if (!auction || auction.status !== 'active') throw new AppError('Auction not active')
-    if (new Date() > auction.endAt) throw new AppError('Auction has ended')
+    if (new Date() > new Date(auction.endAt)) throw new AppError('Auction has ended')
     if (amount <= auction.currentBid) throw new AppError('Bid must be higher than current bid')
 
-    const member = await tx.member.findUnique({ where: { id: memberId } })
+    // Lock member row to prevent balance race condition
+    const [member] = await tx.$queryRawUnsafe<any[]>(
+      `SELECT * FROM "Member" WHERE id = $1 FOR UPDATE`, memberId
+    )
     if (!member) throw new AppError('Member not found')
     if (member.points < amount) throw new AppError('Insufficient GP balance')
 

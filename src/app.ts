@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
+import rateLimit from '@fastify/rate-limit'
 import { env } from './config/env.js'
 import { AppError } from './utils/errors.js'
 import { ZodError } from 'zod'
@@ -16,8 +17,9 @@ import { invitesRoutes } from './modules/invites/invites.routes.js'
 export function buildApp() {
   const app = Fastify({ logger: true })
 
-  app.register(cors, { origin: 'http://localhost:3003' })
+  app.register(cors, { origin: env.CORS_ORIGIN })
   app.register(jwt, { secret: env.JWT_SECRET })
+  app.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
   // Routes
   app.register(authRoutes)

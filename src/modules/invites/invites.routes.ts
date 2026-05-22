@@ -22,7 +22,7 @@ export async function invitesRoutes(app: FastifyInstance) {
 
   app.post('/invites', async (request, reply) => {
     const data = createInviteSchema.parse(request.body)
-    const code = randomBytes(8).toString('hex')
+    const code = randomBytes(16).toString('hex')
     const invite = await prisma.invite.create({ data: { ...data, code } })
     return reply.status(201).send(invite)
   })

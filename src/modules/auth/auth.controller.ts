@@ -14,9 +14,11 @@ export async function googleLogin(request: FastifyRequest, reply: FastifyReply) 
 
   if (env.NODE_ENV === 'development') {
     // Dev mode: token é tratado como email direto
+    // Só aceita emails que já existem no banco (impede acesso arbitrário)
     email = token
     name = token.split('@')[0]
     picture = ''
+    request.log.warn(`⚠️  Dev bypass login: ${email}`)
   } else {
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
