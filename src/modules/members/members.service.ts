@@ -22,8 +22,15 @@ export async function updateRole(id: string, data: { role?: Role; rank?: Rank })
 }
 
 export async function deleteMember(id: string) {
-  // Delete all related records in a transaction
   return prisma.$transaction(async (tx) => {
+    // Delete slots in requests created by this member
+    const memberRequests = await tx.levelUpRequest.findMany({ where: { createdById: id }, select: { id: true } })
+    const requestIds = memberRequests.map(r => r.id)
+    if (requestIds.length > 0) {
+      await tx.levelUpSlot.deleteMany({ where: { requestId: { in: requestIds } } })
+    }
+
+    // Delete slots this member joined in other requests
     await tx.levelUpSlot.deleteMany({ where: { joinedById: id } })
     await tx.levelUpHelper.deleteMany({ where: { memberId: id } })
     await tx.levelUpRequest.deleteMany({ where: { createdById: id } })
