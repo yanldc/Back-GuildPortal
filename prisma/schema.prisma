@@ -59,7 +59,7 @@ model Member {
   level     Int      @default(60)
   rank      Rank     @default(Member)
   role      Role     @default(member)
-  points    Int      @default(150)
+  points    Int      @default(0)
   guild     String   @default("RuinToo")
   altNames  String[]
   joinedAt  DateTime @default(now())

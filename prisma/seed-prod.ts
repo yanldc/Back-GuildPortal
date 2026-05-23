@@ -26,7 +26,7 @@ async function main() {
       class: 'Vanguard',
       rank: 'Leader',
       role: 'admin',
-      points: 500,
+      points: 0,
     },
   })
 
