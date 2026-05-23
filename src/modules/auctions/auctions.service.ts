@@ -115,10 +115,21 @@ export async function placeBid(auctionId: string, memberId: string, amount: numb
       data: { auctionId, memberId, memberName: member.name, amount },
     })
 
+    // Extend auction by 30s if bid is placed in the last 30 seconds
+    const timeRemaining = new Date(auction.endAt).getTime() - Date.now()
+    const newEndAt = timeRemaining <= 30000
+      ? new Date(Date.now() + 30000)
+      : undefined
+
     // Update auction
     return tx.auction.update({
       where: { id: auctionId },
-      data: { currentBid: amount, currentWinnerId: memberId, currentWinnerName: member.name },
+      data: {
+        currentBid: amount,
+        currentWinnerId: memberId,
+        currentWinnerName: member.name,
+        ...(newEndAt ? { endAt: newEndAt } : {}),
+      },
     })
   })
 }
