@@ -36,6 +36,15 @@ export async function deleteMember(id: string) {
     await tx.levelUpRequest.deleteMany({ where: { createdById: id } })
     await tx.eventRsvp.deleteMany({ where: { memberId: id } })
     await tx.pointTransaction.deleteMany({ where: { memberId: id } })
+
+    // Delete bids in auctions created by this member (from other members)
+    const memberAuctions = await tx.auction.findMany({ where: { createdById: id }, select: { id: true } })
+    const auctionIds = memberAuctions.map(a => a.id)
+    if (auctionIds.length > 0) {
+      await tx.bid.deleteMany({ where: { auctionId: { in: auctionIds } } })
+    }
+
+    // Delete this member's own bids on other auctions
     await tx.bid.deleteMany({ where: { memberId: id } })
     await tx.auction.deleteMany({ where: { createdById: id } })
     await tx.member.delete({ where: { id } })
