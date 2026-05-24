@@ -2,7 +2,7 @@ import { prisma } from '../../utils/prisma.js'
 import { ForbiddenError } from '../../utils/errors.js'
 import { env } from '../../config/env.js'
 
-export async function loginWithGoogle(email: string, name: string, avatar: string) {
+export async function loginWithGoogle(email: string, name: string, avatar: string, inviteCode?: string) {
   let member = await prisma.member.findUnique({ where: { email } })
 
   if (!member) {
@@ -22,8 +22,16 @@ export async function loginWithGoogle(email: string, name: string, avatar: strin
       return member
     }
 
-    const invite = await prisma.invite.findUnique({ where: { email } })
-    if (!invite) throw new ForbiddenError('Access restricted: no invite found for this email')
+    // Try to find invite by code first, then by email
+    let invite = null
+    if (inviteCode) {
+      invite = await prisma.invite.findUnique({ where: { code: inviteCode } })
+    }
+    if (!invite) {
+      invite = await prisma.invite.findUnique({ where: { email } })
+    }
+
+    if (!invite) throw new ForbiddenError('Access restricted: no invite found for this email or code')
 
     member = await prisma.member.create({
       data: {

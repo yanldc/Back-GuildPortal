@@ -17,18 +17,18 @@ const COOKIE_OPTIONS = {
 }
 
 export async function googleLogin(request: FastifyRequest, reply: FastifyReply) {
-  const { token } = googleLoginSchema.parse(request.body)
+  const { token, inviteCode } = googleLoginSchema.parse(request.body)
 
   let email: string, name: string, picture: string
 
   if (env.NODE_ENV === 'development') {
-    // Dev mode: token is treated as email, but ONLY if the email exists in DB or matches ADMIN_EMAIL
     email = token
     const existingMember = await prisma.member.findUnique({ where: { email } })
     const existingInvite = await prisma.invite.findUnique({ where: { email } })
+    const hasInviteCode = inviteCode ? await prisma.invite.findUnique({ where: { code: inviteCode } }) : null
     const isAdminEmail = env.ADMIN_EMAIL && email === env.ADMIN_EMAIL
 
-    if (!existingMember && !existingInvite && !isAdminEmail) {
+    if (!existingMember && !existingInvite && !hasInviteCode && !isAdminEmail) {
       throw new AppError('Dev bypass restricted: email not found in DB or invites', 403)
     }
 
@@ -49,7 +49,7 @@ export async function googleLogin(request: FastifyRequest, reply: FastifyReply) 
     picture = payload.picture ?? ''
   }
 
-  const member = await loginWithGoogle(email, name, picture)
+  const member = await loginWithGoogle(email, name, picture, inviteCode)
 
   const jwt = request.server.jwt.sign(
     { id: member.id, email: member.email, role: member.role, rank: member.rank },
