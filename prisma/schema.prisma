@@ -90,6 +90,7 @@ model Auction {
   imageUrl          String
   description       String?
   allowedClasses    String[]
+  allowedGuilds     String[]   @default(["any"])
   createdAt         DateTime      @default(now())
 
   createdBy Member @relation(fields: [createdById], references: [id])
@@ -119,6 +120,7 @@ model GuildEvent {
   rewards     String[]
   weekday     String?
   time        String?
+  allowedGuilds String[]  @default(["any"])
   createdAt   DateTime    @default(now())
 
   rsvps EventRsvp[]

@@ -8,6 +8,7 @@ export const createAuctionSchema = z.object({
   imageUrl: z.string().min(1).max(5000),
   description: z.string().max(500).optional(),
   allowedClasses: z.array(z.string()).default(['any']),
+  allowedGuilds: z.array(z.string()).default(['any']),
 })
 
 export const placeBidSchema = z.object({

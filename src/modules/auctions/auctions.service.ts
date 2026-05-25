@@ -35,7 +35,7 @@ export async function getAuctionById(id: string) {
 
 export async function createAuction(data: {
   itemName: string; itemGrade: ItemGrade; minBid: number; endAt: string;
-  imageUrl: string; description?: string; allowedClasses: string[]
+  imageUrl: string; description?: string; allowedClasses: string[]; allowedGuilds: string[]
 }, createdById: string) {
   return prisma.auction.create({
     data: {
@@ -67,6 +67,11 @@ export async function placeBid(auctionId: string, memberId: string, amount: numb
     // Check allowed classes
     if (!auction.allowedClasses.includes('any') && !auction.allowedClasses.includes(member.class)) {
       throw new AppError('Your class is not allowed for this auction')
+    }
+
+    // Check allowed guilds
+    if (!auction.allowedGuilds.includes('any') && !auction.allowedGuilds.includes(member.guild)) {
+      throw new AppError('Your guild is not allowed for this auction')
     }
 
     // Spam protection: 30s between bids

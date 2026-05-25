@@ -9,6 +9,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']).default('development'),
   ADMIN_EMAIL: z.string().email().optional(),
   CORS_ORIGIN: z.string().default('http://localhost:3003'),
+  BACKUP_EMAIL_TO: z.string().email().optional(),
+  BACKUP_SMTP_HOST: z.string().optional(),
+  BACKUP_SMTP_PORT: z.coerce.number().optional(),
+  BACKUP_SMTP_USER: z.string().optional(),
+  BACKUP_SMTP_PASS: z.string().optional(),
 }).refine(
   (data) => !(data.NODE_ENV === 'production' && data.CORS_ORIGIN === '*'),
   { message: 'CORS_ORIGIN cannot be "*" in production', path: ['CORS_ORIGIN'] }

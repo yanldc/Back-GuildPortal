@@ -9,6 +9,7 @@ export const createEventSchema = z.object({
   rewards: z.array(z.string()).default([]),
   weekday: z.string().optional(),
   time: z.string().optional(),
+  allowedGuilds: z.array(z.string()).default(['any']),
 })
 
 export const updateEventSchema = createEventSchema.partial()
